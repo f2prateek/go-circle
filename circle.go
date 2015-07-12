@@ -440,3 +440,31 @@ func (c *Client) Retry(username, project string, num int) (Build, error) {
 
 	return b, nil
 }
+
+// Cancels the build and returns a summary of the build.
+//
+// https://circleci.com/docs/api#cancel-build
+// https://circleci.com/api/v1/project/{username}/{project}/{num}/cancel
+func (c *Client) Cancel(username, project string, num int) (Build, error) {
+	url := fmt.Sprintf("https://circleci.com/api/v1/project/%s/%s/%d/cancel?circle-token=%s", username, project, num, c.token)
+
+	request, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return Build{}, err
+	}
+
+	request.Header.Set("Accept", "application/json")
+
+	response, err := c.http.Do(request)
+	if err != nil {
+		return Build{}, err
+	}
+
+	var b Build
+	err = json.NewDecoder(response.Body).Decode(&b)
+	if err != nil {
+		return Build{}, err
+	}
+
+	return b, nil
+}
