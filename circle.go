@@ -472,3 +472,31 @@ func (c *Client) Cancel(username, project string, num int) (Build, error) {
 
 	return b, nil
 }
+
+// Triggers a new build and returns a summary of the build.
+//
+// https://circleci.com/docs/api#new-build
+// https://circleci.com/api/v1/project/{username}/{project}/tree/{branch}
+func (c *Client) Build(username, project, branch string) (Build, error) {
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s/tree/%s", username, project, branch))
+
+	request, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return Build{}, err
+	}
+
+	request.Header.Set("Accept", "application/json")
+
+	response, err := c.http.Do(request)
+	if err != nil {
+		return Build{}, err
+	}
+
+	var b Build
+	err = json.NewDecoder(response.Body).Decode(&b)
+	if err != nil {
+		return Build{}, err
+	}
+
+	return b, nil
+}
