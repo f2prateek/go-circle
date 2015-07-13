@@ -16,6 +16,10 @@ func New(token string) *Client {
 	return &Client{token, http.DefaultClient}
 }
 
+func (c *Client) endpoint(endpoint string) string {
+	return fmt.Sprintf("https://circleci.com/api/v1%s?circle-token=%s", endpoint, c.token)
+}
+
 type Me struct {
 	Admin               bool        `json:"admin"`
 	Emails              []string    `json:"all_emails"`
@@ -47,7 +51,7 @@ type Me struct {
 // https://circleci.com/docs/api#user
 // https://circleci.com/api/v1/me
 func (c *Client) Me() (Me, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/me?circle-token=%s", c.token)
+	url := c.endpoint("/me")
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -125,7 +129,7 @@ type Project struct {
 // https://circleci.com/docs/api#projects
 // https://circleci.com/api/v1/projects
 func (c *Client) Projects() ([]Project, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/projects?circle-token=%s", c.token)
+	url := c.endpoint("/projects")
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -240,7 +244,7 @@ type BuildSummary struct {
 // https://circleci.com/docs/api#recent-builds
 // https://circleci.com/api/v1/recent-builds
 func (c *Client) RecentBuilds() ([]BuildSummary, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/recent-builds?circle-token=%s", c.token)
+	url := c.endpoint("/recent-builds")
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -268,7 +272,7 @@ func (c *Client) RecentBuilds() ([]BuildSummary, error) {
 // https://circleci.com/docs/api#recent-builds-project
 // https://circleci.com/api/v1/project/{username}/{project}
 func (c *Client) RecentBuildsForProject(username, project string) ([]BuildSummary, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/project/%s/%s?circle-token=%s", username, project, c.token)
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s", username, project))
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -327,7 +331,7 @@ type DetailedBuildSummary struct {
 // https://circleci.com/docs/api#build
 // https://circleci.com/api/v1/project/{username}/{project}/{num}
 func (c *Client) BuildSummary(username, project string, num int) (DetailedBuildSummary, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/project/%s/%s/%d?circle-token=%s", username, project, num, c.token)
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d", username, project, num))
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -362,7 +366,7 @@ type Artifact struct {
 // https://circleci.com/docs/api#build-artifacts
 // https://circleci.com/api/v1/project/{username}/{project}/{num}/artifacts
 func (c *Client) Artifacts(username, project string, num int) ([]Artifact, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/project/%s/%s/%d/artifacts?circle-token=%s", username, project, num, c.token)
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/artifacts", username, project, num))
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -418,7 +422,7 @@ type Build struct {
 // https://circleci.com/docs/api#retry-build
 // https://circleci.com/api/v1/project/{username}/{project}/{num}/retry
 func (c *Client) Retry(username, project string, num int) (Build, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/project/%s/%s/%d/retry?circle-token=%s", username, project, num, c.token)
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/retry", username, project, num))
 
 	request, err := http.NewRequest("POST", url, nil)
 	if err != nil {
@@ -446,7 +450,7 @@ func (c *Client) Retry(username, project string, num int) (Build, error) {
 // https://circleci.com/docs/api#cancel-build
 // https://circleci.com/api/v1/project/{username}/{project}/{num}/cancel
 func (c *Client) Cancel(username, project string, num int) (Build, error) {
-	url := fmt.Sprintf("https://circleci.com/api/v1/project/%s/%s/%d/cancel?circle-token=%s", username, project, num, c.token)
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/cancel", username, project, num))
 
 	request, err := http.NewRequest("POST", url, nil)
 	if err != nil {
