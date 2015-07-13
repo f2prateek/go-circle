@@ -500,3 +500,36 @@ func (c *Client) Build(username, project, branch string) (Build, error) {
 
 	return b, nil
 }
+
+// Response type indicating the status of clearing the cache.
+type ClearCacheResponse struct {
+	Status string `json:"status"`
+}
+
+// Clears the cache for a project
+//
+// https://circleci.com/docs/api#clear-cache
+// https://circleci.com/api/v1/project/{username}/{project}/build-cache
+func (client *Client) ClearCache(username, project string) (ClearCacheResponse, error) {
+	url := client.endpoint(fmt.Sprintf("/project/%s/%s/build-cache", username, project))
+
+	request, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return ClearCacheResponse{}, err
+	}
+
+	request.Header.Set("Accept", "application/json")
+
+	response, err := client.http.Do(request)
+	if err != nil {
+		return ClearCacheResponse{}, err
+	}
+
+	var c ClearCacheResponse
+	err = json.NewDecoder(response.Body).Decode(&c)
+	if err != nil {
+		return ClearCacheResponse{}, err
+	}
+
+	return c, nil
+}
