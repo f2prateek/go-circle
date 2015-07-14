@@ -234,8 +234,8 @@ type BuildSummary struct {
 		Name   string `json:"name"`
 	} `json:"user"`
 	Username    string `json:"username"`
-	VcsRevision string `json:"vcs_revision"`
-	VcsURL      string `json:"vcs_url"`
+	VCSRevision string `json:"vcs_revision"`
+	VCSURL      string `json:"vcs_url"`
 	Why         string `json:"why"`
 }
 
