@@ -6,17 +6,30 @@ import (
 	"net/http"
 )
 
-type Client struct {
+type CircleCI interface {
+	Me() (Me, error)
+	Projects() ([]Project, error)
+	RecentBuilds() ([]BuildSummary, error)
+	RecentBuildsForProject(username, project string) ([]BuildSummary, error)
+	BuildSummary(username, project string, num int) (DetailedBuildSummary, error)
+	Artifacts(username, project string, num int) ([]Artifact, error)
+	Retry(username, project string, num int) (Build, error)
+	Cancel(username, project string, num int) (Build, error)
+	Build(username, project, branch string) (Build, error)
+	ClearCache(username, project string) (ClearCacheResponse, error)
+}
+
+type client struct {
 	token string
 	http  *http.Client
 }
 
 // New returns a Client for the given `token`.
-func New(token string) *Client {
-	return &Client{token, http.DefaultClient}
+func New(token string) CircleCI {
+	return &client{token, http.DefaultClient}
 }
 
-func (c *Client) endpoint(endpoint string) string {
+func (c *client) endpoint(endpoint string) string {
 	return fmt.Sprintf("https://circleci.com/api/v1%s?circle-token=%s", endpoint, c.token)
 }
 
@@ -50,7 +63,7 @@ type Me struct {
 // Provides information about the authenticated user.
 // https://circleci.com/docs/api#user
 // https://circleci.com/api/v1/me
-func (c *Client) Me() (Me, error) {
+func (c *client) Me() (Me, error) {
 	url := c.endpoint("/me")
 
 	request, err := http.NewRequest("GET", url, nil)
@@ -128,7 +141,7 @@ type Project struct {
 //
 // https://circleci.com/docs/api#projects
 // https://circleci.com/api/v1/projects
-func (c *Client) Projects() ([]Project, error) {
+func (c *client) Projects() ([]Project, error) {
 	url := c.endpoint("/projects")
 
 	request, err := http.NewRequest("GET", url, nil)
@@ -243,7 +256,7 @@ type BuildSummary struct {
 //
 // https://circleci.com/docs/api#recent-builds
 // https://circleci.com/api/v1/recent-builds
-func (c *Client) RecentBuilds() ([]BuildSummary, error) {
+func (c *client) RecentBuilds() ([]BuildSummary, error) {
 	url := c.endpoint("/recent-builds")
 
 	request, err := http.NewRequest("GET", url, nil)
@@ -271,7 +284,7 @@ func (c *Client) RecentBuilds() ([]BuildSummary, error) {
 //
 // https://circleci.com/docs/api#recent-builds-project
 // https://circleci.com/api/v1/project/{username}/{project}
-func (c *Client) RecentBuildsForProject(username, project string) ([]BuildSummary, error) {
+func (c *client) RecentBuildsForProject(username, project string) ([]BuildSummary, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s", username, project))
 
 	request, err := http.NewRequest("GET", url, nil)
@@ -330,7 +343,7 @@ type DetailedBuildSummary struct {
 //
 // https://circleci.com/docs/api#build
 // https://circleci.com/api/v1/project/{username}/{project}/{num}
-func (c *Client) BuildSummary(username, project string, num int) (DetailedBuildSummary, error) {
+func (c *client) BuildSummary(username, project string, num int) (DetailedBuildSummary, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d", username, project, num))
 
 	request, err := http.NewRequest("GET", url, nil)
@@ -365,7 +378,7 @@ type Artifact struct {
 //
 // https://circleci.com/docs/api#build-artifacts
 // https://circleci.com/api/v1/project/{username}/{project}/{num}/artifacts
-func (c *Client) Artifacts(username, project string, num int) ([]Artifact, error) {
+func (c *client) Artifacts(username, project string, num int) ([]Artifact, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/artifacts", username, project, num))
 
 	request, err := http.NewRequest("GET", url, nil)
@@ -421,7 +434,7 @@ type Build struct {
 //
 // https://circleci.com/docs/api#retry-build
 // https://circleci.com/api/v1/project/{username}/{project}/{num}/retry
-func (c *Client) Retry(username, project string, num int) (Build, error) {
+func (c *client) Retry(username, project string, num int) (Build, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/retry", username, project, num))
 
 	request, err := http.NewRequest("POST", url, nil)
@@ -449,7 +462,7 @@ func (c *Client) Retry(username, project string, num int) (Build, error) {
 //
 // https://circleci.com/docs/api#cancel-build
 // https://circleci.com/api/v1/project/{username}/{project}/{num}/cancel
-func (c *Client) Cancel(username, project string, num int) (Build, error) {
+func (c *client) Cancel(username, project string, num int) (Build, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/cancel", username, project, num))
 
 	request, err := http.NewRequest("POST", url, nil)
@@ -477,7 +490,7 @@ func (c *Client) Cancel(username, project string, num int) (Build, error) {
 //
 // https://circleci.com/docs/api#new-build
 // https://circleci.com/api/v1/project/{username}/{project}/tree/{branch}
-func (c *Client) Build(username, project, branch string) (Build, error) {
+func (c *client) Build(username, project, branch string) (Build, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/tree/%s", username, project, branch))
 
 	request, err := http.NewRequest("POST", url, nil)
@@ -510,8 +523,8 @@ type ClearCacheResponse struct {
 //
 // https://circleci.com/docs/api#clear-cache
 // https://circleci.com/api/v1/project/{username}/{project}/build-cache
-func (client *Client) ClearCache(username, project string) (ClearCacheResponse, error) {
-	url := client.endpoint(fmt.Sprintf("/project/%s/%s/build-cache", username, project))
+func (c *client) ClearCache(username, project string) (ClearCacheResponse, error) {
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s/build-cache", username, project))
 
 	request, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -520,16 +533,16 @@ func (client *Client) ClearCache(username, project string) (ClearCacheResponse, 
 
 	request.Header.Set("Accept", "application/json")
 
-	response, err := client.http.Do(request)
+	response, err := c.http.Do(request)
 	if err != nil {
 		return ClearCacheResponse{}, err
 	}
 
-	var c ClearCacheResponse
-	err = json.NewDecoder(response.Body).Decode(&c)
+	var res ClearCacheResponse
+	err = json.NewDecoder(response.Body).Decode(&res)
 	if err != nil {
 		return ClearCacheResponse{}, err
 	}
 
-	return c, nil
+	return res, nil
 }
