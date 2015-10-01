@@ -7,15 +7,63 @@ import (
 )
 
 type CircleCI interface {
+	// Provides information about the authenticated user.
+	// https://circleci.com/docs/api#user
+	// https://circleci.com/api/v1/me
 	Me() (Me, error)
+
+	// Provides information about projects followed by the authenticated user.
+	//
+	// https://circleci.com/docs/api#projects
+	// https://circleci.com/api/v1/projects
 	Projects() ([]Project, error)
+
+	// Provides Build summary for each of the last 30 recent builds, ordered by BuildNum.
+	//
+	// https://circleci.com/docs/api#recent-builds
+	// https://circleci.com/api/v1/recent-builds
 	RecentBuilds() ([]BuildSummary, error)
+
+	// Provides build summary for each of the last 30 builds for a single git repo.
+	//
+	// https://circleci.com/docs/api#recent-builds-project
+	// https://circleci.com/api/v1/project/{username}/{project}
 	RecentBuildsForProject(username, project string) ([]BuildSummary, error)
+
+	// Provides a detailed build summary for the given build for the project.
+	//
+	// https://circleci.com/docs/api#build
+	// https://circleci.com/api/v1/project/{username}/{project}/{num}
 	BuildSummary(username, project string, num int) (DetailedBuildSummary, error)
+
+	// List the artifacts produced by the given build.
+	//
+	// https://circleci.com/docs/api#build-artifacts
+	// https://circleci.com/api/v1/project/{username}/{project}/{num}/artifacts
 	Artifacts(username, project string, num int) ([]Artifact, error)
+
+	// Retries the build and returns a summary of the new build.
+	//
+	// https://circleci.com/docs/api#retry-build
+	// https://circleci.com/api/v1/project/{username}/{project}/{num}/retry
 	Retry(username, project string, num int) (Build, error)
+
+	// Cancels the build and returns a summary of the build.
+	//
+	// https://circleci.com/docs/api#cancel-build
+	// https://circleci.com/api/v1/project/{username}/{project}/{num}/cancel
 	Cancel(username, project string, num int) (Build, error)
+
+	// Triggers a new build and returns a summary of the build.
+	//
+	// https://circleci.com/docs/api#new-build
+	// https://circleci.com/api/v1/project/{username}/{project}/tree/{branch}
 	Build(username, project, branch string) (Build, error)
+
+	// Clears the cache for a project
+	//
+	// https://circleci.com/docs/api#clear-cache
+	// https://circleci.com/api/v1/project/{username}/{project}/build-cache
 	ClearCache(username, project string) (ClearCacheResponse, error)
 }
 
@@ -60,9 +108,6 @@ type Me struct {
 	TrialEnd      string `json:"trial_end"`
 }
 
-// Provides information about the authenticated user.
-// https://circleci.com/docs/api#user
-// https://circleci.com/api/v1/me
 func (c *client) Me() (Me, error) {
 	url := c.endpoint("/me")
 
@@ -137,10 +182,6 @@ type Project struct {
 	VCSURL              string          `json:"vcs_url"`
 }
 
-// Provides information about projects followed by the authenticated user.
-//
-// https://circleci.com/docs/api#projects
-// https://circleci.com/api/v1/projects
 func (c *client) Projects() ([]Project, error) {
 	url := c.endpoint("/projects")
 
@@ -252,10 +293,6 @@ type BuildSummary struct {
 	Why         string `json:"why"`
 }
 
-// Provides Build summary for each of the last 30 recent builds, ordered by BuildNum.
-//
-// https://circleci.com/docs/api#recent-builds
-// https://circleci.com/api/v1/recent-builds
 func (c *client) RecentBuilds() ([]BuildSummary, error) {
 	url := c.endpoint("/recent-builds")
 
@@ -280,10 +317,6 @@ func (c *client) RecentBuilds() ([]BuildSummary, error) {
 	return b, nil
 }
 
-// Provides build summary for each of the last 30 builds for a single git repo.
-//
-// https://circleci.com/docs/api#recent-builds-project
-// https://circleci.com/api/v1/project/{username}/{project}
 func (c *client) RecentBuildsForProject(username, project string) ([]BuildSummary, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s", username, project))
 
@@ -339,10 +372,6 @@ type DetailedBuildSummary struct {
 	} `json:"steps"`
 }
 
-// Provides a detailed build summary for the given build for the project.
-//
-// https://circleci.com/docs/api#build
-// https://circleci.com/api/v1/project/{username}/{project}/{num}
 func (c *client) BuildSummary(username, project string, num int) (DetailedBuildSummary, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d", username, project, num))
 
@@ -374,10 +403,6 @@ type Artifact struct {
 	URL        string `json:"url"`
 }
 
-// List the artifacts produced by the given build.
-//
-// https://circleci.com/docs/api#build-artifacts
-// https://circleci.com/api/v1/project/{username}/{project}/{num}/artifacts
 func (c *client) Artifacts(username, project string, num int) ([]Artifact, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/artifacts", username, project, num))
 
@@ -430,10 +455,6 @@ type Build struct {
 	Why         string `json:"why"`
 }
 
-// Retries the build and returns a summary of the new build.
-//
-// https://circleci.com/docs/api#retry-build
-// https://circleci.com/api/v1/project/{username}/{project}/{num}/retry
 func (c *client) Retry(username, project string, num int) (Build, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/retry", username, project, num))
 
@@ -458,10 +479,6 @@ func (c *client) Retry(username, project string, num int) (Build, error) {
 	return b, nil
 }
 
-// Cancels the build and returns a summary of the build.
-//
-// https://circleci.com/docs/api#cancel-build
-// https://circleci.com/api/v1/project/{username}/{project}/{num}/cancel
 func (c *client) Cancel(username, project string, num int) (Build, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/cancel", username, project, num))
 
@@ -486,10 +503,6 @@ func (c *client) Cancel(username, project string, num int) (Build, error) {
 	return b, nil
 }
 
-// Triggers a new build and returns a summary of the build.
-//
-// https://circleci.com/docs/api#new-build
-// https://circleci.com/api/v1/project/{username}/{project}/tree/{branch}
 func (c *client) Build(username, project, branch string) (Build, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/tree/%s", username, project, branch))
 
@@ -519,10 +532,6 @@ type ClearCacheResponse struct {
 	Status string `json:"status"`
 }
 
-// Clears the cache for a project
-//
-// https://circleci.com/docs/api#clear-cache
-// https://circleci.com/api/v1/project/{username}/{project}/build-cache
 func (c *client) ClearCache(username, project string) (ClearCacheResponse, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/build-cache", username, project))
 
