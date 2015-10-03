@@ -81,6 +81,7 @@ func (c *client) endpoint(endpoint string) string {
 	return fmt.Sprintf("https://circleci.com/api/v1%s?circle-token=%s", endpoint, c.token)
 }
 
+// Information about the authenticated user.
 type Me struct {
 	Admin               bool        `json:"admin"`
 	Emails              []string    `json:"all_emails"`
@@ -132,6 +133,7 @@ func (c *client) Me() (Me, error) {
 	return m, nil
 }
 
+// Information about a project.
 type Project struct {
 	AWS struct {
 		KeyPair interface{} `json:"keypair"`
@@ -206,6 +208,7 @@ func (c *client) Projects() ([]Project, error) {
 	return p, nil
 }
 
+// Summary of a build.
 type BuildSummary struct {
 	CommitDetails []struct {
 		AuthorDate     string `json:"author_date"`
@@ -341,6 +344,7 @@ func (c *client) RecentBuildsForProject(username, project string) ([]BuildSummar
 	return b, nil
 }
 
+// Detailed summary of a build.
 type DetailedBuildSummary struct {
 	BuildSummary
 	Owners          []string      `json:"owners"`
@@ -396,6 +400,7 @@ func (c *client) BuildSummary(username, project string, num int) (DetailedBuildS
 	return b, nil
 }
 
+// Artifact created by a build.
 type Artifact struct {
 	NodeIndex  int    `json:"node_index"`
 	Path       string `json:"path"`
@@ -427,6 +432,7 @@ func (c *client) Artifacts(username, project string, num int) ([]Artifact, error
 	return a, nil
 }
 
+// Information about a build.
 type Build struct {
 	Body            string      `json:"body"`
 	Branch          string      `json:"branch"`
@@ -479,6 +485,7 @@ func (c *client) Retry(username, project string, num int) (Build, error) {
 	return b, nil
 }
 
+// Information about a build.
 func (c *client) Cancel(username, project string, num int) (Build, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/%d/cancel", username, project, num))
 
