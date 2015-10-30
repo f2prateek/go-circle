@@ -30,6 +30,13 @@ type CircleCI interface {
 	// https://circleci.com/api/v1/project/{username}/{project}
 	RecentBuildsForProject(username, project string) ([]BuildSummary, error)
 
+	// Provides build summary for each of the last 30 builds for a single branch of a
+	// github branch.
+	//
+	// https://circleci.com/docs/api#recent-builds-project
+	// https://circleci.com/api/v1/project/{username}/{project}
+	RecentBuildsForProjectBranch(username, project, branch string) ([]BuildSummary, error)
+
 	// Provides a detailed build summary for the given build for the project.
 	//
 	// https://circleci.com/docs/api#build
@@ -322,6 +329,30 @@ func (c *client) RecentBuilds() ([]BuildSummary, error) {
 
 func (c *client) RecentBuildsForProject(username, project string) ([]BuildSummary, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s", username, project))
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return make([]BuildSummary, 0), err
+	}
+
+	request.Header.Set("Accept", "application/json")
+
+	response, err := c.http.Do(request)
+	if err != nil {
+		return make([]BuildSummary, 0), err
+	}
+
+	var b []BuildSummary
+	err = json.NewDecoder(response.Body).Decode(&b)
+	if err != nil {
+		return make([]BuildSummary, 0), err
+	}
+
+	return b, nil
+}
+
+func (c *client) RecentBuildsForProjectBranch(username, project, branch string) ([]BuildSummary, error) {
+	url := c.endpoint(fmt.Sprintf("/project/%s/%s/tree/%s", username, project, branch))
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {

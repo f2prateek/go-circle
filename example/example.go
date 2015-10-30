@@ -14,6 +14,7 @@ func main() {
 	fmt.Println(circle.Projects())
 	fmt.Println(circle.RecentBuilds())
 	fmt.Println(circle.RecentBuildsForProject("segmentio", "analytics-android"))
+	fmt.Println(circle.RecentBuildsForProjectBranch("segmentio", "analytics-android", "pull/382"))
 	fmt.Println(circle.BuildSummary("segmentio", "analytics-android", 345))
 	fmt.Println(circle.Artifacts("segmentio", "analytics-android", 345))
 	fmt.Println(circle.Retry("segmentio", "analytics-android", 346))
