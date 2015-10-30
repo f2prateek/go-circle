@@ -35,7 +35,7 @@ type CircleCI interface {
 	//
 	// https://circleci.com/docs/api#recent-builds-project
 	// https://circleci.com/api/v1/project/{username}/{project}
-	RecentBuildsForProjectBranch(username, project, branch string) ([]BuildSummary, error)
+	RecentBuildsForProjectBranch(username, project, branch string, opts RecentBuildsOptions) ([]BuildSummary, error)
 
 	// Provides a detailed build summary for the given build for the project.
 	//
@@ -351,8 +351,23 @@ func (c *client) RecentBuildsForProject(username, project string) ([]BuildSummar
 	return b, nil
 }
 
-func (c *client) RecentBuildsForProjectBranch(username, project, branch string) ([]BuildSummary, error) {
+type RecentBuildsOptions struct {
+	Limit  *int
+	Offset *int
+	Filter *string
+}
+
+func (c *client) RecentBuildsForProjectBranch(username, project, branch string, options RecentBuildsOptions) ([]BuildSummary, error) {
 	url := c.endpoint(fmt.Sprintf("/project/%s/%s/tree/%s", username, project, branch))
+	if options.Limit != nil {
+		url = fmt.Sprintf("%s&limit=%d", url, *options.Limit)
+	}
+	if options.Offset != nil {
+		url = fmt.Sprintf("%s&offset=%d", url, *options.Offset)
+	}
+	if options.Filter != nil {
+		url = fmt.Sprintf("%s&filter=%s", url, *options.Filter)
+	}
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
